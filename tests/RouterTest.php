@@ -1,4 +1,4 @@
-<?php
+<?php namespace cklamm\Router\Tests;
 
 use cklamm\Router\Router;
 use PHPUnit\Framework\TestCase;
