@@ -36,7 +36,7 @@ class RouterTest extends TestCase
         $this->router->get('any/foo', 'get_any_foo', 'get_any_foo');
         $this->router->get('any/:var', 'get_any_var', 'get_any_var');
         $this->router->get('any/?opt', 'get_any_opt', 'get_any_opt');
-        $this->router->get('any/*', 'get_any_', 'get_any_');
+        $this->router->get('any/*any', 'get_any_any', 'get_any_any');
     }
 
     protected function generate_handler($method, $route)
@@ -93,6 +93,91 @@ class RouterTest extends TestCase
         $this->assertSame($expected, $path);
     }
 
+    public function test_exception_route_already_exists()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/:a', 'get_foo_a');
+        $router->get('foo/:b', 'get_foo_b');
+    }
+
+    public function test_exception_named_route_already_exists()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo', 'get_foo', 'name');
+        $router->get('bar', 'get_bar', 'name');
+    }
+
+    public function test_exception_named_route_does_not_exist()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->path('name');
+    }
+
+    public function test_exception_parameter_must_have_name()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/:/bar', 'get_foo_var_bar');
+    }
+
+    public function test_exception_optional_parameter_must_have_name()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/?/bar', 'get_foo_var_bar');
+    }
+
+    public function test_exception_optional_parameter_followed_by()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/?var/bar', 'get_foo_var_bar');
+    }
+
+    public function test_exception_wildcard_must_be_last_segment()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/*/bar', 'get_foo_var_bar');
+    }
+
+    public function test_exception_no_value_for_placeholder()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/:var', 'get_foo_var', 'get_foo_var');
+        $router->path('get_foo_var');
+    }
+
+    public function test_exception_wildcard_must_have_name()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/*', 'get_foo_var', 'get_foo_var');
+        $router->path('get_foo_var', ['wildcard' => 5]);
+    }
+
+    public function test_exception_wildcard_expects_array()
+    {
+        $this->expectException(\Exception::class);
+
+        $router = new Router();
+        $router->get('foo/*wildcard', 'get_foo_var', 'get_foo_var');
+        $router->path('get_foo_var', ['wildcard' => 5]);
+    }
+
     public function routeProvider()
     {
         return [
@@ -133,8 +218,8 @@ class RouterTest extends TestCase
             ['get', 'any', 'any/?opt', [null]],
             ['get', 'any/foo', 'any/foo'],
             ['get', 'any/bar', 'any/:var', ['bar']],
-            ['get', 'any/foo/bar', 'any/*', ['foo', 'bar']],
-            ['get', 'any/a/b/c', 'any/*', ['a', 'b', 'c']],
+            ['get', 'any/foo/bar', 'any/*any', ['foo', 'bar']],
+            ['get', 'any/a/b/c', 'any/*any', ['a', 'b', 'c']],
         ];
     }
 
@@ -179,23 +264,42 @@ class RouterTest extends TestCase
             ['get_', [], ''],
             ['get_pages', [], 'pages'],
             ['get_pages_id', ['foo'], 'pages/foo'],
+            ['get_pages_id', ['id' => 'foo'], 'pages/foo'],
             ['get_pages_about', [], 'pages/about'],
             ['get_pages_id_edit', [0], 'pages/0/edit'],
+            ['get_pages_id_edit', ['id' => 0], 'pages/0/edit'],
             ['get_pages_about_edit', [], 'pages/about/edit'],
 
             ['get_calendar_year_month_day', [2020], 'calendar/2020'],
             ['get_calendar_year_month_day', [2020, 12], 'calendar/2020/12'],
             ['get_calendar_year_month_day', [2020, 12, 31], 'calendar/2020/12/31'],
 
+            ['get_calendar_year_month_day', [
+                'year' => 2020
+            ], 'calendar/2020'],
+            ['get_calendar_year_month_day', [
+                'year' => 2020, 'month' => 12
+            ], 'calendar/2020/12'],
+            ['get_calendar_year_month_day', [
+                'year' => 2020, 'month' => 12, 'day' => 31
+            ], 'calendar/2020/12/31'],
+
             ['get_any_foo', [], 'any/foo'],
             ['get_any_var', ['foo'], 'any/foo'],
+            ['get_any_var', ['var' => 'foo'], 'any/foo'],
             ['get_any_opt', [], 'any'],
             ['get_any_opt', ['foo'], 'any/foo'],
+            ['get_any_opt', ['opt' => 'foo'], 'any/foo'],
 
-            ['get_any_', [], 'any'],
-            ['get_any_', ['foo'], 'any/foo'],
-            ['get_any_', ['foo', 'bar'], 'any/foo/bar'],
-            ['get_any_', [3, 4, 5], 'any/3/4/5'],
+            ['get_any_any', [], 'any'],
+            ['get_any_any', ['foo'], 'any/foo'],
+            ['get_any_any', ['foo', 'bar'], 'any/foo/bar'],
+            ['get_any_any', [3, 4, 5], 'any/3/4/5'],
+
+            ['get_any_any', ['any' => []], 'any'],
+            ['get_any_any', ['any' => ['foo']], 'any/foo'],
+            ['get_any_any', ['any' => ['foo', 'bar']], 'any/foo/bar'],
+            ['get_any_any', ['any' => [3, 4, 5]], 'any/3/4/5'],
         ];
     }
 }

@@ -34,15 +34,16 @@ class Node
         if ($key == '?') $optional = true;
 
         if (in_array($part, [':', '?'])) {
-            throw new \Exception('Route placeholder must have a name.');
+            throw new \Exception('Route parameter must have a name.');
         }
 
         if ($optional && !in_array($key, ['?', '*'])) {
-            throw new \Exception('An optional parameter can only be followed by optional and wildcard parameters.');
+            throw new \Exception('An optional parameter may only be followed
+            by optional and wildcard parameters.');
         }
 
         if ($key == '*' && !empty($parts)) {
-            throw new \Exception('Wildcard must be the last route segment.');
+            throw new \Exception('A wildcard must be the last route segment.');
         }
 
         if (!isset($this->nodes[$key])) {

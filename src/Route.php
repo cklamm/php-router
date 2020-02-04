@@ -41,12 +41,18 @@ class Route
             }
 
             if ($part[0] == '*') {
-                if ($assoc && !is_array($data[$key])) {
+                if ($assoc && $key === '') {
+                    throw new \Exception('Wildcard parameter must have a name.');
+                }
+
+                if ($assoc && isset($data[$key]) && !is_array($data[$key])) {
                     throw new \Exception('Value for route wildcard must be an array.');
                 }
 
-                if (!$assoc && isset($data[$key])) {
-                    $data[$key] = implode('/', array_slice($data, $key));
+                if (isset($data[$key])) {
+                    if ($assoc) $data[$key] = implode('/', $data[$key]);
+                    else $data[$key] = implode('/', array_slice($data, $key));
+                    if ($data[$key] === '') $data[$key] = null;
                 }
             }
 
