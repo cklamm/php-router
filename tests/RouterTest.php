@@ -29,12 +29,20 @@ class RouterTest extends TestCase
                 $this->get('edit', 'get_pages_about_edit', 'get_pages_about_edit');
             })->middleware('pages_about');
         })->middleware('pages');
+
+        $this->router->get('calendar/:year/?month/?day',
+            'get_calendar_year_month_day', 'get_calendar_year_month_day');
+
+        $this->router->get('any/foo', 'get_any_foo', 'get_any_foo');
+        $this->router->get('any/:var', 'get_any_var', 'get_any_var');
+        $this->router->get('any/?opt', 'get_any_opt', 'get_any_opt');
+        $this->router->get('any/*', 'get_any_', 'get_any_');
     }
 
     protected function generate_handler($method, $route)
     {
         if (is_null($route)) return null;
-        $route = preg_replace('#/:?#', '_', $route);
+        $route = preg_replace('#/[:?*]?#', '_', $route);
         return strtolower($method) . '_' . $route;
     }
 
@@ -114,6 +122,19 @@ class RouterTest extends TestCase
             ['get', 'pages/foo/edit', 'pages/:id/edit', ['foo']],
             ['get', 'pages/about/edit', 'pages/about/edit'],
             ['get', 'pages/create/edit', 'pages/:id/edit', ['create']],
+            ['get', 'pages/foo/bar', null],
+
+            ['get', 'calendar', null],
+            ['get', 'calendar/2020', 'calendar/:year/?month/?day', ['2020', null, null]],
+            ['get', 'calendar/2020/12', 'calendar/:year/?month/?day', ['2020', '12', null]],
+            ['get', 'calendar/2020/12/31', 'calendar/:year/?month/?day', ['2020', '12', '31']],
+            ['get', 'calendar/2020/12/31/foo', null],
+
+            ['get', 'any', 'any/?opt', [null]],
+            ['get', 'any/foo', 'any/foo'],
+            ['get', 'any/bar', 'any/:var', ['bar']],
+            ['get', 'any/foo/bar', 'any/*', ['foo', 'bar']],
+            ['get', 'any/a/b/c', 'any/*', ['a', 'b', 'c']],
         ];
     }
 
@@ -132,6 +153,7 @@ class RouterTest extends TestCase
             ['get', 'pages/foo/edit', ['global', 'pages', 'pages_var']],
             ['get', 'pages/about/edit', ['global', 'pages', 'pages_about']],
             ['get', 'pages/create/edit', ['global', 'pages', 'pages_var']],
+            ['get', 'pages/foo/bar', []],
         ];
     }
 
@@ -147,6 +169,7 @@ class RouterTest extends TestCase
             ['get', 'pages/about', ['GET', 'PUT', 'DELETE']],
             ['get', 'pages/foo/edit', ['GET']],
             ['get', 'pages/about/edit', ['GET']],
+            ['get', 'pages/foo/bar', []],
         ];
     }
 
@@ -157,8 +180,22 @@ class RouterTest extends TestCase
             ['get_pages', [], 'pages'],
             ['get_pages_id', ['foo'], 'pages/foo'],
             ['get_pages_about', [], 'pages/about'],
-            ['get_pages_id_edit', [5], 'pages/5/edit'],
+            ['get_pages_id_edit', [0], 'pages/0/edit'],
             ['get_pages_about_edit', [], 'pages/about/edit'],
+
+            ['get_calendar_year_month_day', [2020], 'calendar/2020'],
+            ['get_calendar_year_month_day', [2020, 12], 'calendar/2020/12'],
+            ['get_calendar_year_month_day', [2020, 12, 31], 'calendar/2020/12/31'],
+
+            ['get_any_foo', [], 'any/foo'],
+            ['get_any_var', ['foo'], 'any/foo'],
+            ['get_any_opt', [], 'any'],
+            ['get_any_opt', ['foo'], 'any/foo'],
+
+            ['get_any_', [], 'any'],
+            ['get_any_', ['foo'], 'any/foo'],
+            ['get_any_', ['foo', 'bar'], 'any/foo/bar'],
+            ['get_any_', [3, 4, 5], 'any/3/4/5'],
         ];
     }
 }
