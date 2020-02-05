@@ -84,7 +84,7 @@ The following route has one required and two optional parameters. It matches pat
 $router->get('calendar/:year/?month/?day', 'calendar');
 ```
 
-> :warning: Be aware that this library does not use regular expressions for parameters, so the above route would also match `calendar/foo/bar`. Any validation must be done by the implementing application.
+:warning: Be aware that this library does not use regular expressions for parameters, so the above route would also match `calendar/foo/bar`. Any validation must be done by the implementing application.
 
 ## Route Groups
 
