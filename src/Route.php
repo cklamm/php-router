@@ -1,5 +1,7 @@
 <?php namespace cklamm\Router;
 
+use cklamm\Router\Exceptions\PathGenerationException;
+
 class Route
 {
     public $method;
@@ -37,16 +39,16 @@ class Route
             $key = $assoc ? $name : $i++;
 
             if ($part[0] == ':' && !isset($data[$key])) {
-                throw new \Exception('No value given for route placeholder ' . $name);
+                throw PathGenerationException::missingParameterValue($name);
             }
 
             if ($part[0] == '*') {
                 if ($assoc && $key === '') {
-                    throw new \Exception('Wildcard parameter must have a name.');
+                    throw PathGenerationException::missingWildcardName();
                 }
 
                 if ($assoc && isset($data[$key]) && !is_array($data[$key])) {
-                    throw new \Exception('Value for route wildcard must be an array.');
+                    throw PathGenerationException::invalidWildcardValue();
                 }
 
                 if (isset($data[$key])) {

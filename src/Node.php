@@ -1,5 +1,7 @@
 <?php namespace cklamm\Router;
 
+use cklamm\Router\Exceptions\InvalidRouteException;
+
 class Node
 {
     protected $routes = [];
@@ -8,7 +10,7 @@ class Node
     public function add($method, $route, $handler, $name = null): Route
     {
         if (isset($this->routes[$method])) {
-            throw new \Exception('Route already exists: ' . $method . ' ' . $route);
+            throw InvalidRouteException::routeExists($method, $route);
         }
 
         $route = new Route($method, $route, $handler, $name);
@@ -26,16 +28,15 @@ class Node
         if ($key == '?') $optional = true;
 
         if (in_array($part, [':', '?'])) {
-            throw new \Exception('Route parameter must have a name.');
+            throw InvalidRouteException::missingParameterName();
         }
 
         if ($optional && !in_array($key, ['?', '*'])) {
-            throw new \Exception('An optional parameter may only be followed
-            by optional and wildcard parameters.');
+            throw InvalidRouteException::invalidOptionalParameter();
         }
 
         if ($key == '*' && !empty($parts)) {
-            throw new \Exception('A wildcard must be the last route segment.');
+            throw InvalidRouteException::invalidWildcardParameter();
         }
 
         if (!isset($this->nodes[$key])) {

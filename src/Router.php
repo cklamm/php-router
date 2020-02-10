@@ -1,5 +1,7 @@
 <?php namespace cklamm\Router;
 
+use cklamm\Router\Exceptions\PathGenerationException;
+use cklamm\Router\Exceptions\InvalidRouteException;
 use Closure;
 
 class Router
@@ -90,13 +92,13 @@ class Router
         return $result;
     }
 
-    public function path($route, $data = []): string
+    public function path($name, $data = []): string
     {
-        if (!isset($this->names[$route])) {
-            throw new \Exception('Named route does not exist: ' . $route);
+        if (!isset($this->names[$name])) {
+            throw PathGenerationException::namedRouteUndefined($name);
         }
 
-        return $this->names[$route]->path($data);
+        return $this->names[$name]->path($data);
     }
 
     protected function sanitize($path): string
@@ -112,7 +114,7 @@ class Router
     protected function setName($name, $route): void
     {
         if (isset($this->names[$name])) {
-            throw new \Exception('Named route already exists: ' . $name);
+            throw InvalidRouteException::namedRouteExists($name);
         }
 
         $this->names[$name] = $route;
