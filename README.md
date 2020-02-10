@@ -90,9 +90,9 @@ $router->get('calendar/:year/?month/?day', 'calendar');
 
 Routes can be grouped with the `group` method.
 
-`group(string $group, \Closure $cb = null): Node`
+`group(string $prefix, \Closure $cb): Node`
 
-* `$group` is the prefix that all routes in this group will have. The prefix can consist of several segments.
+* `$prefix` is the prefix that all routes in this group will have. The prefix can consist of several segments.
 * `$cb` is a callback function that contains the grouped route definitions. Inside this function, `$this` refers to the `Router` instance.
 
 Route groups can be nested.
@@ -118,7 +118,7 @@ Many PHP frameworks make use of *middleware* which provides functionality that s
 
 ### Global Middleware
 
-Middleware that should be executed for every request in your application can be assigned directly to the router.
+Middleware that should be executed for every route can be assigned directly to the router.
 
 ```php
 $router->middleware('global1');
@@ -133,18 +133,12 @@ $router->middleware('global1', 'global2');
 
 ### Group Middleware
 
-Middleware that should be executed for several related routes can be assigned to a route group.
+Middleware that should be executed for several routes can be assigned to a route group. If you do not want the grouped routes to have a common prefix, use an empty string as prefix.
 
 ```php
 $router->group('foo', function () {
     $this->get('bar', 'handler');
-})->middleware('group_mw');
-```
-
-If you do not want to use groups for defining routes, you can still use them for assigning middleware by omitting the callback function.
-
-```php
-$router->group('foo')->middleware('group_mw');
+})->middleware('mw1', 'mw2');
 ```
 
 ### Route Middleware
@@ -152,7 +146,7 @@ $router->group('foo')->middleware('group_mw');
 Middleware that should be executed for a single route only can be assigned to that route. Note that unlike global and group middleware, route middleware only applies to the HTTP method of that route.
 
 ```php
-$router->get('foo/bar', 'handler')->middleware('route_mw');
+$router->get('foo/bar', 'handler')->middleware('mw1', 'mw2');
 ```
 
 ## Dispatching
@@ -179,7 +173,7 @@ Property | Description
 `name` | The name of the matching route or `null`.
 `handler` | The handler of the matching route or `null`.
 `parameters` | An array containing the parameter values that have been extracted from the requested path. The values are in order of the parameters as they are defined in the route.
-`middleware` | An array containing the middleware for matching route. This includes global, group and route middleware in the correct order.
+`middleware` | An array containing middleware for the matching route. This includes global, group and route middleware in the correct order.
 `options` | An array with the HTTP methods that are available for the requested path.
 
 If the `handler` that was defined for the route is a callback function, it can be executed like this:

@@ -18,11 +18,12 @@ class RouterTest extends TestCase
             $this->get('create', 'get_pages_create', 'get_pages_create');
             $this->post('', 'post_pages', 'post_pages')->middleware('pages_post');
 
-            $this->group(':id')->middleware('pages_var');
-            $this->get(':id', 'get_pages_id', 'get_pages_id')->middleware('pages_var_get');
-            $this->get(':id/edit', 'get_pages_id_edit', 'get_pages_id_edit');
-            $this->put(':id', 'put_pages_id', 'put_pages_id');
-            $this->delete(':id', 'delete_pages_id', 'delete_pages_id');
+            $this->group(':id', function () {
+                $this->get('', 'get_pages_id', 'get_pages_id')->middleware('pages_var_get');
+                $this->get('edit', 'get_pages_id_edit', 'get_pages_id_edit');
+                $this->put('', 'put_pages_id', 'put_pages_id');
+                $this->delete('', 'delete_pages_id', 'delete_pages_id');
+            })->middleware('pages_var');
 
             $this->group('about', function () {
                 $this->get('', 'get_pages_about', 'get_pages_about');

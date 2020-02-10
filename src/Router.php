@@ -5,23 +5,26 @@ use Closure;
 class Router
 {
     protected $tree;
-    protected $group = '';
+    protected $group;
     protected $names = [];
+    protected $middleware = [];
 
     public function __construct()
     {
         $this->tree = new Node();
+        $this->group = new Group('');
     }
 
     public function add($method, $route, $handler, $name = null): Route
     {
         $method = strtoupper($method);
-        $route = $this->sanitize($this->group . $route);
+        $route = $this->sanitize($this->group->prefix . $route);
         $parts = $this->split($route);
 
         $node = $this->tree->build($parts);
         $route = $node->add($method, $route, $handler, $name);
         if (isset($name)) $this->setName($name, $route);
+        $this->group->add($route);
 
         return $route;
     }
@@ -51,24 +54,27 @@ class Router
         return $this->add('DELETE', $route, $handler, $name);
     }
 
-    public function group($group, Closure $cb = null): Node
+    public function group($prefix, Closure $cb): Group
     {
-        $group = $this->sanitize($this->group . $group);
-        $parts = $this->split($group);
+        $prefix = $this->sanitize($this->group->prefix . $prefix);
+        $parts = $this->split($prefix);
+        $group = new Group($prefix . '/');
 
-        if (isset($cb)) {
-            $temp = $this->group;
-            $this->group = $group . '/';
-            Closure::bind($cb, $this)();
-            $this->group = $temp;
-        }
+        $temp = $this->group;
+        $this->group = $group;
+        Closure::bind($cb, $this)();
+        $temp->add(...$this->group->routes);
+        $this->group = $temp;
 
-        return $this->tree->build($parts);
+        $this->tree->build($parts);
+        return $group;
     }
 
     public function middleware(...$names): void
     {
-        $this->tree->middleware(...$names);
+        foreach ($names as $name) {
+            $this->middleware[] = $name;
+        }
     }
 
     public function dispatch($method, $path): Result
@@ -79,7 +85,7 @@ class Router
 
         $search = new Search($method, $path);
         $this->tree->search($parts, $search);
-        $result = new Result($search);
+        $result = new Result($search, $this->middleware);
 
         return $result;
     }

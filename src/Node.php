@@ -3,7 +3,6 @@
 class Node
 {
     protected $routes = [];
-    protected $middleware = [];
     protected $nodes = [];
 
     public function add($method, $route, $handler, $name = null): Route
@@ -16,13 +15,6 @@ class Node
         $this->routes[$method] = $route;
 
         return $route;
-    }
-
-    public function middleware(...$names): void
-    {
-        foreach ($names as $name) {
-            $this->middleware[] = $name;
-        }
     }
 
     public function build($parts, $optional = false): Node
@@ -53,39 +45,35 @@ class Node
         return $this->nodes[$key]->build($parts, $optional);
     }
 
-    public function search($parts, Search $search, $params = [], $mw = []): Search
+    public function search($parts, Search $search, $params = []): Search
     {
         $remaining = $parts;
         $part = array_shift($remaining);
 
-        if (!empty($this->middleware)) {
-            array_push($mw, ...$this->middleware);
-        }
-
         if (empty($parts)) {
             foreach ($this->routes as $route) {
-                $search->add($route, $params, $mw);
+                $search->add($route, $params);
             }
         }
         else {
             if (isset($this->nodes[$part])) {
-                $this->nodes[$part]->search($remaining, $search, $params, $mw);
+                $this->nodes[$part]->search($remaining, $search, $params);
             }
 
             if (isset($this->nodes[':'])) {
                 $p = array_merge($params, [$part]);
-                $this->nodes[':']->search($remaining, $search, $p, $mw);
+                $this->nodes[':']->search($remaining, $search, $p);
             }
         }
 
         if (isset($this->nodes['?'])) {
             $p = array_merge($params, [$part ?? null]);
-            $this->nodes['?']->search($remaining, $search, $p, $mw);
+            $this->nodes['?']->search($remaining, $search, $p);
         }
 
         if (isset($this->nodes['*'])) {
             if (!empty($parts)) array_push($params, ...$parts);
-            $this->nodes['*']->search([], $search, $params, $mw);
+            $this->nodes['*']->search([], $search, $params);
         }
 
         return $search;

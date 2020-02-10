@@ -13,7 +13,7 @@ class Result
     public $middleware = [];
     public $options = [];
 
-    public function __construct(Search $search)
+    public function __construct(Search $search, array $global)
     {
         $this->code = 404;
         $this->method = $search->method;
@@ -33,7 +33,7 @@ class Result
         $this->name = $route->name;
 
         $this->parameters = $search->parameters[$this->method];
-        $this->middleware = $search->middleware[$this->method];
+        $this->middleware = $global;
 
         if (!empty($route->middleware)) {
             array_push($this->middleware, ...$route->middleware);
