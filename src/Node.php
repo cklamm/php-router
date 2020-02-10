@@ -7,7 +7,7 @@ class Node
     protected $routes = [];
     protected $nodes = [];
 
-    public function add($method, $route, $handler, $name = null): Route
+    public function add(string $method, string $route, $handler, string $name = null): Route
     {
         if (isset($this->routes[$method])) {
             throw InvalidRouteException::routeExists($method, $route);
@@ -19,7 +19,7 @@ class Node
         return $route;
     }
 
-    public function build($parts, $optional = false): Node
+    public function build(array $parts, bool $optional = false): Node
     {
         if (empty($parts)) return $this;
 
@@ -46,7 +46,7 @@ class Node
         return $this->nodes[$key]->build($parts, $optional);
     }
 
-    public function search($parts, Search $search, $params = []): Search
+    public function search(array $parts, Search $search, array $params = []): Search
     {
         $remaining = $parts;
         $part = array_shift($remaining);

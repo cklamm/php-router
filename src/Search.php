@@ -8,7 +8,7 @@ class Search
     public $routes = [];
     public $parameters = [];
 
-    public function __construct($method, $path)
+    public function __construct(string $method, string $path)
     {
         $this->method = $method;
         $this->path = $path;

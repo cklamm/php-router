@@ -11,7 +11,7 @@ class Route
 
     public $middleware = [];
 
-    public function __construct($method, $route, $handler, $name = null)
+    public function __construct(string $method, string $route, $handler, string $name = null)
     {
         $this->method = $method;
         $this->route = $route;

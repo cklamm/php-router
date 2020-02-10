@@ -17,7 +17,7 @@ class Router
         $this->group = new Group('');
     }
 
-    public function add($method, $route, $handler, $name = null): Route
+    public function add(string $method, string $route, $handler, string $name = null): Route
     {
         $method = strtoupper($method);
         $route = $this->sanitize($this->group->prefix . $route);
@@ -31,32 +31,32 @@ class Router
         return $route;
     }
 
-    public function get($route, $handler, $name = null): Route
+    public function get(string $route, $handler, string $name = null): Route
     {
         return $this->add('GET', $route, $handler, $name);
     }
 
-    public function post($route, $handler, $name = null): Route
+    public function post(string $route, $handler, string $name = null): Route
     {
         return $this->add('POST', $route, $handler, $name);
     }
 
-    public function put($route, $handler, $name = null): Route
+    public function put(string $route, $handler, string $name = null): Route
     {
         return $this->add('PUT', $route, $handler, $name);
     }
 
-    public function patch($route, $handler, $name = null): Route
+    public function patch(string $route, $handler, string $name = null): Route
     {
         return $this->add('PATCH', $route, $handler, $name);
     }
 
-    public function delete($route, $handler, $name = null): Route
+    public function delete(string $route, $handler, string $name = null): Route
     {
         return $this->add('DELETE', $route, $handler, $name);
     }
 
-    public function group($prefix, Closure $cb): Group
+    public function group(string $prefix, Closure $cb): Group
     {
         $prefix = $this->sanitize($this->group->prefix . $prefix);
         $parts = $this->split($prefix);
@@ -79,7 +79,7 @@ class Router
         }
     }
 
-    public function dispatch($method, $path): Result
+    public function dispatch(string $method, string $path): Result
     {
         $method = strtoupper($method);
         $path = $this->sanitize($path);
@@ -92,7 +92,7 @@ class Router
         return $result;
     }
 
-    public function path($name, $data = []): string
+    public function path(string $name, $data = []): string
     {
         if (!isset($this->names[$name])) {
             throw PathGenerationException::namedRouteUndefined($name);
@@ -101,17 +101,17 @@ class Router
         return $this->names[$name]->path($data);
     }
 
-    protected function sanitize($path): string
+    protected function sanitize(string $path): string
     {
         return preg_replace('#/+#', '/', trim($path, '/'));
     }
 
-    protected function split($path): array
+    protected function split(string $path): array
     {
         return ($path === '') ? [] : explode('/', $path);
     }
 
-    protected function setName($name, $route): void
+    protected function setName(string $name, Route $route): void
     {
         if (isset($this->names[$name])) {
             throw InvalidRouteException::namedRouteExists($name);
