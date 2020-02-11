@@ -28,8 +28,12 @@ class Route
 
     public function path($data = []): string
     {
-        if (is_object($data)) $data = (array) $data;
-        $assoc = count(array_filter(array_keys($data), 'is_string')) > 0;
+        $assoc = is_object($data);
+
+        if (is_array($data)) {
+            $assoc = count(array_filter(array_keys($data), 'is_string')) > 0;
+        }
+
         $parts = explode('/', $this->route);
         $i = 0;
 
@@ -38,7 +42,11 @@ class Route
             $name = substr($part, 1);
             $key = $assoc ? $name : $i++;
 
-            if ($part[0] == ':' && !isset($data[$key])) {
+            $val = null;
+            if (is_object($data) && isset($data->$key)) $val = $data->$key;
+            if (is_array($data) && isset($data[$key])) $val = $data[$key];
+
+            if ($part[0] == ':' && !isset($val)) {
                 throw PathGenerationException::missingParameterValue($name);
             }
 
@@ -47,18 +55,18 @@ class Route
                     throw PathGenerationException::missingWildcardName();
                 }
 
-                if ($assoc && isset($data[$key]) && !is_array($data[$key])) {
+                if ($assoc && isset($val) && !is_array($val)) {
                     throw PathGenerationException::invalidWildcardValue();
                 }
 
-                if (isset($data[$key])) {
-                    if ($assoc) $data[$key] = implode('/', $data[$key]);
-                    else $data[$key] = implode('/', array_slice($data, $key));
-                    if ($data[$key] === '') $data[$key] = null;
+                if (isset($val)) {
+                    if ($assoc) $val = implode('/', $val);
+                    else $val = implode('/', array_slice($data, $key));
+                    if ($val === '') $val = null;
                 }
             }
 
-            $part = $data[$key] ?? null;
+            $part = $val ?? null;
         }
 
         return implode('/', array_filter($parts, function ($val) {
